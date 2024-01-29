@@ -350,11 +350,14 @@ print(prima_value, importe_comision_value, a_favor_value)
 def process_and_sum_vida(df, year, riesgo):
     # Step 1: Filter the DataFrame
     filtered_df = filter_dataframe_vida(df, year, riesgo)
+
+    # Step 2: Generate reaseguros dictionary
+    reaseguros_dict = create_reaseguros_dict(filtered_df)
     
-    # Step 2: Remove totals from the filtered DataFrame
+    # Step 3: Remove totals from the filtered DataFrame
     processed_df = remove_totals(filtered_df)
     
-    # Step 3: Calculate the sums
+    # Step 4: Calculate the sums
     sums_result = calculate_sums(processed_df)
     
     return sums_result
@@ -372,6 +375,9 @@ print("A Favor:", your_sums_result[2])
 def process_and_sum_patrimoniales(df, year, riesgo):
     # Step 1: Filter the DataFrame
     filtered_df = filter_dataframe_patrimoniales(df, year, riesgo)
+
+    # Step 2: Generate reaseguros dictionary
+    reaseguros_dict = create_reaseguros_dict(filtered_df)
     
     # Step 2: Remove totals from the filtered DataFrame
     processed_df = remove_totals(filtered_df)
@@ -379,7 +385,7 @@ def process_and_sum_patrimoniales(df, year, riesgo):
     # Step 3: Calculate the sums
     sums_result = calculate_sums(processed_df)
     
-    return sums_result
+    return sums_result, reaseguros_dict
 """
 # Example usage
 # Replace 'your_dataframe' with the actual DataFrame variable name
@@ -394,14 +400,17 @@ print("A Favor:", your_sums_result[2])
 def process_sum_recuperos_patrimoniales(df, year, riesgo):
     # Step 1: Filter the DataFrame
     filtered_df = filter_recuperos_patrimoniales(df, year, riesgo)
+
+    # Step 2: Generate reaseguros dictionary
+    reaseguros_dict = create_reaseguros_dict_recuperos(filtered_df)
     
-    # Step 2: Remove totals from the filtered DataFrame
+    # Step 3: Remove totals from the filtered DataFrame
     processed_df = remove_totals_recuperos(filtered_df)
     
-    # Step 3: Calculate the sums
+    # Step 4: Calculate the sums
     sums_result = calculate_sums_recuperos(processed_df)
     
-    return sums_result
+    return sums_result, reaseguros_dict
 
 """
 # Example usage
@@ -417,14 +426,17 @@ print("Importe Total:", your_sums_result[2])
 def process_sum_recuperos_vida(df, year, riesgo):
     # Step 1: Filter the DataFrame
     filtered_df = filter_recuperos_vida(df, year, riesgo)
+
+    # Step 2: Generate reaseguros dictionary
+    reaseguros_dict = create_reaseguros_dict_recuperos(filtered_df)
     
-    # Step 2: Remove totals from the filtered DataFrame
+    # Step 3: Remove totals from the filtered DataFrame
     processed_df = remove_totals_recuperos(filtered_df)
     
-    # Step 3: Calculate the sums
+    # Step 4: Calculate the sums
     sums_result = calculate_sums_recuperos(processed_df)
     
-    return sums_result
+    return sums_result, reaseguros_dict
 """
 # Example usage
 # Replace 'your_dataframe' with the actual DataFrame variable name
@@ -437,6 +449,10 @@ print("Importe Total:", your_sums_result[2])
 
 
 def create_reaseguros_dict(df):
+    if df is None:
+        print("Error: df is None")
+        return None
+    
     # Elimina las filas que tienen la palabra "Reasegurador" en la primera columna
     filtered_df = df[df.iloc[:, 0] != 'Reasegurador']
 
@@ -454,6 +470,9 @@ def create_reaseguros_dict(df):
 
 
 def create_reaseguros_dict_recuperos(df):
+    if df is None:
+        print("Error: df is None")
+        return None
     # Elimina las filas que tienen la palabra "Reasegurador" en la primera columna
     filtered_df = df[df.iloc[:, 4] != 'Reasegurador']
 
@@ -470,8 +489,18 @@ def create_reaseguros_dict_recuperos(df):
     return result_dict
 
 
-def calculate_table_values(prima_qs, prima_exc, prima_anulada_qs, prima_anulada_exc,
-                           comisiones_qs, comisiones_exc, siniestros_qs, siniestros_exc, tasa):
+def calculate_table_values(resumen_dic, tasa):
+    # Desempacar los valores del diccionario
+    prima_qs = resumen_dic['prima_qs']
+    prima_exc = resumen_dic['prima_exc']
+    prima_anulada_qs = resumen_dic['prima_anulada_qs']
+    prima_anulada_exc = resumen_dic['prima_anulada_exc']
+    comisiones_qs = resumen_dic['comisiones_qs']
+    comisiones_exc = resumen_dic['comisiones_exc']
+    siniestros_qs = resumen_dic['siniestros_qs']
+    siniestros_exc = resumen_dic['siniestros_exc']
+    tasa = tasa
+
     # Calculate the values
     primas_cedidas = prima_qs + prima_exc
     primas_anuladas = prima_anulada_qs + prima_anulada_exc
@@ -489,7 +518,8 @@ def calculate_table_values(prima_qs, prima_exc, prima_anulada_qs, prima_anulada_
         'siniestros_pagados': siniestros_pagados,
         'impuestos': impuestos,
         'balance_a_favor_debe': balance_a_favor_debe,
-        'balance_a_favor_haber': balance_a_favor_haber
+        'balance_a_favor_haber': balance_a_favor_haber,
+        'tasa': tasa
     }
 
 
