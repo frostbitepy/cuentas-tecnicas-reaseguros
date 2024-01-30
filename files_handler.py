@@ -360,7 +360,7 @@ def process_and_sum_vida(df, year, riesgo):
     # Step 4: Calculate the sums
     sums_result = calculate_sums(processed_df)
     
-    return sums_result
+    return sums_result, reaseguros_dict
 """
 # Example usage
 # Replace 'your_dataframe' with the actual DataFrame variable name
