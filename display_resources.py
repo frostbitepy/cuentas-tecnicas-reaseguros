@@ -109,6 +109,23 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
 
     balance_saldo = table_values_dict['balance_a_favor_haber'] - table_values_dict['balance_a_favor_debe']
 
+    data_reaseguradores = []
+
+    if reaseguros_dict_exc is not None:
+        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_exc))
+    if reaseguros_dict_qs is not None:
+        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_qs))
+    if reaseguros_dict_aexc is not None:
+        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_aexc))
+    if reaseguros_dict_aqs is not None:
+        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_aqs))
+    if reaseguros_dict_rexc is not None:
+        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_rexc))
+    if reaseguros_dict_rqs is not None:
+        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_rqs))
+    
+
+    """
     if reaseguros_dict_exc is not None:
         reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_exc, balance_saldo)
     elif reaseguros_dict_qs is not None:
@@ -123,10 +140,10 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
         reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_rqs, balance_saldo)
     else:
         reaseguradores_dict = {}
-
+    
     # Reaseguradores Data
     data_reaseguradores = reaseguradores_dict
-
+    """
     # Crear DataFrame
     resumen_df = pd.DataFrame(data_resumen)
     table_values_df = pd.DataFrame(data_table_values)
@@ -338,7 +355,7 @@ def generate_cuenta_tecnica(dict):
             dict['Prima anulada en el periodo (QS)'],
             dict['Comisiones (EXC)'],
             dict['Comisiones (QS)'],
-            (((dict['Prima cedida en el periodo (EXC)']+dict['Prima anulada en el periodo (EXC)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones (EXC)']+dict['Comisiones (QS)']))*0.045), # IMPUESTO DE LEY - 4,5% DEL PERIODO DE CESION
+            int(((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones (EXC)']+dict['Comisiones (QS)']))*0.045), # IMPUESTO DE LEY - 4,5% DEL PERIODO DE CESION
             dict['Siniestros pagados en el periodo EXC'],
             dict['Siniestros pagados en el periodo QS'],
             (dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones (EXC)']+dict['Comisiones (QS)']), # SUBTOTALES
@@ -378,6 +395,7 @@ def generate_reaseguradores_data(input_dict, valor):
         'Monto': montos
     }
     return data_reaseguradores
+
 
 
 def sum_dataframe_values(resumen_df_container):

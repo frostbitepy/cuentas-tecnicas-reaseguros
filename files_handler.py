@@ -28,8 +28,8 @@ def filter_dataframe_vida(df, year, riesgo, vida=False):
         if (
             df.iloc[i, 2] == "TOTAL:" and
             df.iloc[i, 3] == year and
-            (df.iloc[i, 7]).split()[0] == "VIDA" and
-            not (df.iloc[i, 7]).split()[0] == "CAUCION" and
+            (isinstance(df.iloc[i, 7], str) and (df.iloc[i, 7]).split()[0] == "VIDA") and
+            (isinstance(df.iloc[i, 7], str) and not (df.iloc[i, 7]).split()[0] == "CAUCION") and
             df.iloc[i, 4] == riesgo
         ):
             total_found = True
@@ -88,8 +88,8 @@ def filter_dataframe_patrimoniales(df, year, riesgo, vida=False):
         if (
             df.iloc[i, 2] == "TOTAL:" and
             df.iloc[i, 3] == year and
-            not (df.iloc[i, 7]).split()[0] == "VIDA" and
-            not (df.iloc[i, 7]).split()[0] == "CAUCION" and
+            (isinstance(df.iloc[i, 7], str) and not (df.iloc[i, 7]).split()[0] == "VIDA") and
+            (isinstance(df.iloc[i, 7], str) and not (df.iloc[i, 7]).split()[0] == "CAUCION") and
             df.iloc[i, 4] == riesgo
         ):
             total_found = True
@@ -447,8 +447,8 @@ print("Gastos:", your_sums_result[1])
 print("Importe Total:", your_sums_result[2])
 """
 
-
-def create_reaseguros_dict(df):
+# Deprecated
+def create_reaseguros_dict_2(df):
     if df is None:
         print("Error: df is None")
         return None
@@ -468,6 +468,48 @@ def create_reaseguros_dict(df):
 
     return result_dict
 
+def create_reaseguros_dict(df):
+    # Elimina las filas que tienen la palabra "Reasegurador" en la primera columna
+    filtered_df = df[df.iloc[:, 0] != 'Reasegurador']
+
+    # Obtén los valores únicos de la primera columna
+    unique_values_A = filtered_df.iloc[:, 0].unique()
+
+    # Crea un diccionario con valores de la primera columna como keys y sumas de las columnas 8, 12, 13 como values
+    result_dict = {}
+    for value in unique_values_A:
+        if pd.notna(value):  # Check if the value is not null or NaN
+            prima = filtered_df.loc[filtered_df.iloc[:, 0] == value, filtered_df.columns[7]].sum()
+            importe_comision = filtered_df.loc[filtered_df.iloc[:, 0] == value, filtered_df.columns[11]].sum()
+            a_favor = filtered_df.loc[filtered_df.iloc[:, 0] == value, filtered_df.columns[12]].sum()
+            result_dict[value] = {'prima': prima, 'importe_comision': importe_comision, 'a_favor': a_favor}
+
+    return result_dict
+
+"""
+Output example:
+ dict = {
+'MS AMLIN AG': 	{'prima': 1087343123,
+		'importe_comision': 337076291, 
+		'a_favor': 750266832}, 
+
+'SCOR REINSURANCE COMPANY': 	{'prima': 434937249, 
+				'importe_comision': 108734290, 
+				'a_favor': 326202959}, 
+
+'KOREAN REINSURANCE COMPANY': 	{'prima': 326202936, 
+				'importe_comision': 110908972, 
+				'a_favor': 215293964}, 
+
+'MAPFRE RE COMPAÑIA DE REASEGUROS S.A.': {'prima': 217468624, 
+					'importe_comision': 69589944, 
+					'a_favor': 147878680}, 
+
+'REASEGURADORA PATRIA S.A.': 	{'prima': 108734311, 
+				'importe_comision': 30445601, 
+				'a_favor': 78288710}
+    }
+"""
 
 def create_reaseguros_dict_recuperos(df):
     if df is None:

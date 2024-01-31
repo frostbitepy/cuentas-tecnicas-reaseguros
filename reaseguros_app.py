@@ -61,7 +61,12 @@ def main():
 
                 resumen_df_2023,table_df_2023,reaseguradores_df_2023=generate_resumen(2023, emisiones_df, anulaciones_df, recuperos_df)
                 st.success('Resumen 2023 generado correctamente.')
+                my_bar.progress(95)
+
+                resumen_df_2024,table_df_2024,reaseguradores_df_2024=generate_resumen(2024, emisiones_df, anulaciones_df, recuperos_df)
+                st.success('Resumen 2024 generado correctamente.')
                 my_bar.progress(100)
+
                 time.sleep(1)
                 my_bar.empty()
 
@@ -85,7 +90,12 @@ def main():
 
                 resumen_df_2023,table_df_2023,reaseguradores_df_2023=generate_resumen_vida(2023, emisiones_df, anulaciones_df, recuperos_df)
                 st.success('Resumen 2023 generado correctamente.')
+                my_bar.progress(95)
+
+                resumen_df_2024,table_df_2024,reaseguradores_df_2024=generate_resumen_vida(2024, emisiones_df, anulaciones_df, recuperos_df)
+                st.success('Resumen 2024 generado correctamente.')
                 my_bar.progress(100)
+
                 time.sleep(1)
                 my_bar.empty()
             
@@ -124,6 +134,13 @@ def main():
             st.dataframe(table_df_2023, hide_index=True, use_container_width=True)
             st.dataframe(reaseguradores_df_2023, hide_index=True, use_container_width=True)
 
+        if resumen_df_2024 is not None and table_df_2024 is not None and reaseguradores_df_2024 is not None:
+            st.subheader("Resumen periodo 2023-2024")
+            st.dataframe(resumen_df_2024, hide_index=True)
+            resumen_df_container.append(resumen_df_2024)
+            #st.subheader("Tabla de valores")
+            st.dataframe(table_df_2024, hide_index=True, use_container_width=True)
+            st.dataframe(reaseguradores_df_2024, hide_index=True, use_container_width=True)
 
         # Mostrar estado de cuenta
         if resumen_df_container:    
