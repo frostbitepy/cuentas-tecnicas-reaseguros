@@ -2,7 +2,8 @@ import pandas as pd
 import streamlit as st
 import openpyxl
 from files_handler import (process_and_sum_patrimoniales, process_sum_recuperos_patrimoniales,
-                           calculate_table_values, process_and_sum_vida, process_sum_recuperos_vida)
+                           calculate_table_values, process_and_sum_vida, process_sum_recuperos_vida,
+                           generate_invoice_dict)
 
 
 
@@ -38,8 +39,10 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
     prima_exc=sums_result_emisiones_excedente['prima']
     prima_anulada_qs=sums_result_anulaciones_cuota_parte['prima']
     prima_anulada_exc=sums_result_anulaciones_excedente['prima']
-    comisiones_qs=sums_result_emisiones_cuota_parte['importe_comision'] - sums_result_anulaciones_cuota_parte['importe_comision']
-    comisiones_exc=sums_result_emisiones_excedente['importe_comision'] - sums_result_anulaciones_excedente['importe_comision']
+    comisiones_qs=sums_result_emisiones_cuota_parte['importe_comision']
+    comisiones_exc=sums_result_emisiones_excedente['importe_comision']
+    comisiones_anulacion_qs=sums_result_anulaciones_cuota_parte['importe_comision']
+    comisiones_anulacion_exc=sums_result_anulaciones_excedente['importe_comision']
     siniestros_qs=sums_result_recuperos_cuota_parte['importe_total']
     siniestros_exc=sums_result_recuperos_excedente['importe_total']
 
@@ -50,6 +53,8 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
         'prima_anulada_exc': prima_anulada_exc,
         'comisiones_qs': comisiones_qs,
         'comisiones_exc': comisiones_exc,
+        'comisiones_anulacion_qs': comisiones_anulacion_qs,
+        'comisiones_anulacion_exc': comisiones_anulacion_exc,
         'siniestros_qs': siniestros_qs,
         'siniestros_exc': siniestros_exc
     }
@@ -63,8 +68,10 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
         'Prima cedida en el periodo (EXC)',
         'Prima anulada en el periodo (QS)',
         'Prima anulada en el periodo (EXC)',
-        'Comisiones (QS)',
-        'Comisiones (EXC)',
+        'Comisiones Netas (QS)',
+        'Comisiones Netas (EXC)',
+        'Comisiones Anuladas (QS)',
+        'Comisiones Anuladas (EXC)',
         'Siniestros pagados en el periodo QS',
         'Siniestros pagados en el periodo EXC'
     ],
@@ -75,6 +82,8 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
         prima_anulada_exc,
         comisiones_qs,
         comisiones_exc,
+        comisiones_anulacion_qs,
+        comisiones_anulacion_exc,
         siniestros_qs,
         siniestros_exc
     ]
@@ -109,45 +118,13 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
 
     balance_saldo = table_values_dict['balance_a_favor_haber'] - table_values_dict['balance_a_favor_debe']
 
-    data_reaseguradores = []
-
-    if reaseguros_dict_exc is not None:
-        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_exc))
-    if reaseguros_dict_qs is not None:
-        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_qs))
-    if reaseguros_dict_aexc is not None:
-        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_aexc))
-    if reaseguros_dict_aqs is not None:
-        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_aqs))
-    if reaseguros_dict_rexc is not None:
-        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_rexc))
-    if reaseguros_dict_rqs is not None:
-        data_reaseguradores.append(generate_reaseguradores_data(reaseguros_dict_rqs))
     
+    invoice_dict = generate_invoice_dict(reaseguros_dict_qs, reaseguros_dict_exc, reaseguros_dict_aqs, reaseguros_dict_aexc, reaseguros_dict_rqs, reaseguros_dict_rexc, 0.045)
 
-    """
-    if reaseguros_dict_exc is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_exc, balance_saldo)
-    elif reaseguros_dict_qs is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_qs, balance_saldo)
-    elif reaseguros_dict_aexc is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_aexc, balance_saldo)
-    elif reaseguros_dict_aqs is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_aqs, balance_saldo)
-    elif reaseguros_dict_rexc is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_rexc, balance_saldo)
-    elif reaseguros_dict_rqs is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_rqs, balance_saldo)
-    else:
-        reaseguradores_dict = {}
-    
-    # Reaseguradores Data
-    data_reaseguradores = reaseguradores_dict
-    """
     # Crear DataFrame
     resumen_df = pd.DataFrame(data_resumen)
     table_values_df = pd.DataFrame(data_table_values)
-    reaseguradores_values_df = pd.DataFrame(data_reaseguradores)
+    reaseguradores_values_df = pd.DataFrame(generate_reaseguradores_data(invoice_dict))
 
     # Mostrar DataFrame
     return resumen_df,table_values_df, reaseguradores_values_df
@@ -300,7 +277,7 @@ def generate_table(dict):
 
     # Mostrar DataFrame
     return table_df
-
+###########
 # Deprecated
 def generate_reaseguradores_resumen(dict):
     # Data
@@ -330,7 +307,7 @@ def generate_reaseguradores_resumen(dict):
     df_reaseguradores = pd.DataFrame(data)
 
     return df_reaseguradores
-
+############
 
 def generate_cuenta_tecnica(dict):
     data = {
@@ -339,8 +316,10 @@ def generate_cuenta_tecnica(dict):
             'PRIMAS CEDIDAS CUOTA PARTE',
             'PRIMAS CEDIDAS ANULADAS EXCEDENTE',
             'PRIMAS CEDIDAS ANULADAS CUOTA PARTE',
-            'COMISION NETA EXCEDENTE DEL PERIODO',
-            'COMISION NETA CUOTA PARTE DEL PERIODO',
+            'COMISION EMITIDA EXCEDENTE DEL PERIODO',
+            'COMISION EMITIDA CUOTA PARTE DEL PERIODO',
+            'COMISION ANULADA EXCEDENTE DEL PERIODO',
+            'COMISION ANULADA CUOTA PARTE DEL PERIODO',
             'IMPUESTO DE LEY - 4,5% DEL PERIODO DE CESION',
             'SINIESTROS PAGADOS DEL PERIODO DE CESION EXCEDENTE',
             'SINIESTROS PAGADOS DEL PERIODO DE CESION CUOTA PARTE',
@@ -353,14 +332,23 @@ def generate_cuenta_tecnica(dict):
             0,
             dict['Prima anulada en el periodo (EXC)'],
             dict['Prima anulada en el periodo (QS)'],
-            dict['Comisiones (EXC)'],
-            dict['Comisiones (QS)'],
-            int(((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones (EXC)']+dict['Comisiones (QS)']))*0.045), # IMPUESTO DE LEY - 4,5% DEL PERIODO DE CESION
+            dict['Comisiones Netas (EXC)'],
+            dict['Comisiones Netas (QS)'],
+            dict['Comisiones Anuladas (EXC)'],
+            dict['Comisiones Anuladas (QS)'],
+            int(((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+
+                dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']))*0.045), # IMPUESTO DE LEY - 4,5% DEL PERIODO DE CESION
             dict['Siniestros pagados en el periodo EXC'],
             dict['Siniestros pagados en el periodo QS'],
-            (dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones (EXC)']+dict['Comisiones (QS)']), # SUBTOTALES
+            int(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+
+                +dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']+dict['Siniestros pagados en el periodo QS']+dict['Siniestros pagados en el periodo EXC']+
+                ((((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+
+                dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']))*0.045))), # SUBTOTALES
             0,
-            (dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones (EXC)']+dict['Comisiones (QS)']) # TOTAL
+            int(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+
+                +dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']+dict['Siniestros pagados en el periodo QS']+dict['Siniestros pagados en el periodo EXC']+
+                ((((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+
+                dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']))*0.045))) # TOTAL
         ],
         'HABER':[
             dict['Prima cedida en el periodo (EXC)'],
@@ -372,9 +360,15 @@ def generate_cuenta_tecnica(dict):
             0,
             0,
             0,
+            0,
+            0,
             (dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)']), # SUBTOTALES
-            ((dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones (EXC)']+dict['Comisiones (QS)'])-(dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])), # SALDO DEL ESTADO DE CUENTA
-            ((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])+((dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones (EXC)']+dict['Comisiones (QS)'])-(dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)']))) # TOTAL
+            int(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+
+                +dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']+dict['Siniestros pagados en el periodo QS']+dict['Siniestros pagados en el periodo EXC']+
+                ((((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+
+                dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']))*0.045)))-((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])), # SALDO DEL ESTADO DE CUENTA
+            ((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])+((dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+
+                dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)'])-(dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)']))) # TOTAL
         ]
     }
 
@@ -383,8 +377,8 @@ def generate_cuenta_tecnica(dict):
 
     return df_cuenta_tecnica
 
-
-def generate_reaseguradores_data(input_dict, valor):
+# Deprecated
+def generate_reaseguradores_data_depr(input_dict, valor):
     reaseguradores = list(input_dict.keys())
     participaciones = [str(value) + '%' for value in input_dict.values()]
     montos = [value * valor / 100 for value in input_dict.values()]
@@ -395,7 +389,21 @@ def generate_reaseguradores_data(input_dict, valor):
         'Monto': montos
     }
     return data_reaseguradores
+#############
 
+def generate_reaseguradores_data(input_dict):
+    reaseguradores = list(input_dict.keys())
+    participacion = [str(input_dict[key]['participacion']) + '%' for key in input_dict.keys()]
+    monto_qs = [input_dict[key]['final_qs'] for key in input_dict.keys()]
+    monto_exc = [input_dict[key]['final_exc'] for key in input_dict.keys()]
+
+    data_reaseguradores = {
+        'Reasegurador': reaseguradores,
+        'Participación': participacion,
+        'Monto QS': monto_qs,
+        'Monto EXC': monto_exc
+    }
+    return data_reaseguradores
 
 
 def sum_dataframe_values(resumen_df_container):

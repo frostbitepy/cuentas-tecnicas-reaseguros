@@ -469,6 +469,9 @@ def create_reaseguros_dict_2(df):
     return result_dict
 
 def create_reaseguros_dict(df):
+    if df is None:
+        print("Error: df is None")
+        return None
     # Elimina las filas que tienen la palabra "Reasegurador" en la primera columna
     filtered_df = df[df.iloc[:, 0] != 'Reasegurador']
 
@@ -479,33 +482,39 @@ def create_reaseguros_dict(df):
     result_dict = {}
     for value in unique_values_A:
         if pd.notna(value):  # Check if the value is not null or NaN
+            participacion = filtered_df.loc[filtered_df.iloc[:, 0] == value, filtered_df.columns[5]].values[0]
             prima = filtered_df.loc[filtered_df.iloc[:, 0] == value, filtered_df.columns[7]].sum()
             importe_comision = filtered_df.loc[filtered_df.iloc[:, 0] == value, filtered_df.columns[11]].sum()
             a_favor = filtered_df.loc[filtered_df.iloc[:, 0] == value, filtered_df.columns[12]].sum()
-            result_dict[value] = {'prima': prima, 'importe_comision': importe_comision, 'a_favor': a_favor}
+            result_dict[value] = {'participacion': participacion,'prima': prima, 'importe_comision': importe_comision, 'a_favor': a_favor}
 
     return result_dict
 
 """
 Output example:
  dict = {
-'MS AMLIN AG': 	{'prima': 1087343123,
+'MS AMLIN AG': 	{ 'participacion': 1087343123,
+        'prima': 1087343123,
 		'importe_comision': 337076291, 
 		'a_favor': 750266832}, 
 
-'SCOR REINSURANCE COMPANY': 	{'prima': 434937249, 
+'SCOR REINSURANCE COMPANY': 	{'participacion': 1087343123,
+                'prima': 434937249, 
 				'importe_comision': 108734290, 
 				'a_favor': 326202959}, 
 
-'KOREAN REINSURANCE COMPANY': 	{'prima': 326202936, 
+'KOREAN REINSURANCE COMPANY': 	{'participacion': 1087343123,
+                'prima': 326202936, 
 				'importe_comision': 110908972, 
 				'a_favor': 215293964}, 
 
-'MAPFRE RE COMPAÑIA DE REASEGUROS S.A.': {'prima': 217468624, 
+'MAPFRE RE COMPAÑIA DE REASEGUROS S.A.': {'participacion': 1087343123,
+                    'prima': 217468624, 
 					'importe_comision': 69589944, 
 					'a_favor': 147878680}, 
 
-'REASEGURADORA PATRIA S.A.': 	{'prima': 108734311, 
+'REASEGURADORA PATRIA S.A.': 	{'participacion': 1087343123,
+                'prima': 108734311, 
 				'importe_comision': 30445601, 
 				'a_favor': 78288710}
     }
@@ -521,14 +530,33 @@ def create_reaseguros_dict_recuperos(df):
     # Obtén los valores únicos de la primera columna
     unique_values_A = filtered_df.iloc[:, 4].unique()
 
-    # Crea un diccionario con valores de la primera columna como keys y valores de la quinta columna como values
+
     result_dict = {}
     for value in unique_values_A:
-        # Verifica si la fila no está vacía antes de acceder a la quinta columna
-        if not filtered_df.loc[filtered_df.iloc[:, 4] == value, filtered_df.columns[5]].empty:
-            result_dict[value] = filtered_df.loc[filtered_df.iloc[:, 4] == value, filtered_df.columns[6]].values[0]
-
+        if pd.notna(value):  # Check if the value is not null or NaN
+            participacion = filtered_df.loc[filtered_df.iloc[:, 4] == value, filtered_df.columns[6]].values[0]
+            indemnizacion = filtered_df.loc[filtered_df.iloc[:, 4] == value, filtered_df.columns[9]].sum()
+            importe_gastos = filtered_df.loc[filtered_df.iloc[:, 4] == value, filtered_df.columns[12]].sum()
+            total = filtered_df.loc[filtered_df.iloc[:, 4] == value, filtered_df.columns[14]].sum()
+            result_dict[value] = {'participacion': participacion, 'indemnizacion': indemnizacion, 'importe_gastos': importe_gastos, 'total': total}
+    
     return result_dict
+
+"""
+Output example:
+dict = {
+'REASEGURADORA PATRIA S.A.': 
+            {'participacion': 1087343123, 'indemnizacion': 31904870, 'importe_gastos': 806737, 'total': 32711607}, 
+'MAPFRE RE COMPAÑIA DE REASEGUROS S.A.': 
+            {'participacion': 1087343123, 'indemnizacion': 63809451, 'importe_gastos': 1613404, 'total': 65422855}, 
+'SCOR REINSURANCE COMPANY': 
+            {'participacion': 1087343123, 'indemnizacion': 127619052, 'importe_gastos': 3226735, 'total': 130845787}, 
+'KOREAN REINSURANCE COMPANY': 
+            {'participacion': 1087343123, 'indemnizacion': 95714326, 'importe_gastos': 2420141, 'total': 98134467}, 
+'MS AMLIN AG': 
+            {'participacion': 1087343123, 'indemnizacion': 319047413, 'importe_gastos': 8066947, 'total': 327114360}
+        }
+"""
 
 
 def calculate_table_values(resumen_dic, tasa):
@@ -539,6 +567,8 @@ def calculate_table_values(resumen_dic, tasa):
     prima_anulada_exc = resumen_dic['prima_anulada_exc']
     comisiones_qs = resumen_dic['comisiones_qs']
     comisiones_exc = resumen_dic['comisiones_exc']
+    comisiones_anuladas_qs = resumen_dic['comisiones_anulacion_qs']
+    comisiones_anuladas_exc = resumen_dic['comisiones_anulacion_exc']
     siniestros_qs = resumen_dic['siniestros_qs']
     siniestros_exc = resumen_dic['siniestros_exc']
     tasa = tasa
@@ -548,7 +578,7 @@ def calculate_table_values(resumen_dic, tasa):
     primas_anuladas = prima_anulada_qs + prima_anulada_exc
     comisiones = comisiones_qs + comisiones_exc
     siniestros_pagados = siniestros_qs + siniestros_exc
-    impuestos = (primas_cedidas - (primas_anuladas + comisiones)) * tasa
+    impuestos = (primas_cedidas - ((comisiones_qs - comisiones_anuladas_qs)+(comisiones_exc - comisiones_anuladas_exc)))*tasa
     balance_a_favor_debe = primas_anuladas + comisiones + siniestros_pagados + impuestos
     balance_a_favor_haber = primas_cedidas
 
@@ -585,3 +615,76 @@ def calculate_resumen_values(emitidos_qs, anulados_qs, recuperos_qs, emitidos_ex
         'siniestros_qs': siniestros_qs,
         'siniestros_exc': siniestros_exc
     }
+
+# Esta función primero crea un conjunto de todos los reaseguradores únicos presentes en los cinco diccionarios de entrada. 
+# Luego, para cada reasegurador, recopila los valores correspondientes de cada diccionario de entrada y realiza los cálculos
+# necesarios para completar la tabla. Si un reasegurador no está presente en un diccionario en particular, se utilizan ceros 
+# como valores predeterminados.
+def generate_invoice_dict(dict_emitida_qs, dict_emitida_exc, dict_anulada_qs, dict_anulada_exc, dict_recupero_qs, dict_recupero_exc, tasa):
+    # Initialize None dictionaries to empty dictionaries
+    dict_emitida_qs = dict_emitida_qs or {}
+    dict_emitida_exc = dict_emitida_exc or {}
+    dict_anulada_qs = dict_anulada_qs or {}
+    dict_anulada_exc = dict_anulada_exc or {}
+    dict_recupero_qs = dict_recupero_qs or {}
+    dict_recupero_exc = dict_recupero_exc or {}
+
+    reaseguradores = set(list(dict_emitida_qs.keys()) + list(dict_emitida_exc.keys()) + list(dict_anulada_qs.keys()) + list(dict_anulada_exc.keys()) + list(dict_recupero_qs.keys()) + list(dict_recupero_exc.keys()))
+    
+    result_dict = {}
+    for reasegurador in reaseguradores:
+        prima_emitida_qs = dict_emitida_qs.get(reasegurador, {}).get('prima', 0)
+        comisiones_qs = dict_emitida_qs.get(reasegurador, {}).get('importe_comision', 0)
+        prima_anulada_qs = dict_anulada_qs.get(reasegurador, {}).get('prima', 0)
+        comisiones_anuladas_qs = dict_anulada_qs.get(reasegurador, {}).get('importe_comision', 0)
+        prima_emitida_exc = dict_emitida_exc.get(reasegurador, {}).get('prima', 0)
+        comision_exc = dict_emitida_exc.get(reasegurador, {}).get('importe_comision', 0)
+        prima_anulada_exc = dict_anulada_exc.get(reasegurador, {}).get('prima', 0)
+        comision_anulada_exc = dict_anulada_exc.get(reasegurador, {}).get('importe_comision', 0)
+        recupero_qs_total = dict_recupero_qs.get(reasegurador, {}).get('total', 0)
+        recupero_exc_total = dict_recupero_exc.get(reasegurador, {}).get('total', 0)
+        participacion = (
+            dict_emitida_qs.get(reasegurador, {}).get('participacion') or
+            dict_emitida_exc.get(reasegurador, {}).get('participacion') or
+            dict_anulada_qs.get(reasegurador, {}).get('participacion') or
+            dict_anulada_exc.get(reasegurador, {}).get('participacion') or
+            dict_recupero_qs.get(reasegurador, {}).get('participacion') or
+            dict_recupero_exc.get(reasegurador, {}).get('participacion') or
+            0
+        )
+
+        prima_neta_qs = prima_emitida_qs - prima_anulada_qs
+        prima_neta_exc = prima_emitida_exc - prima_anulada_exc
+        comision_neta_qs = comisiones_qs - comisiones_anuladas_qs
+        comision_neta_exc = comision_exc - comision_anulada_exc
+        iva_qs = (prima_neta_qs - comision_neta_qs) * tasa
+        menos_iva_qs = prima_neta_qs - comision_neta_qs - iva_qs
+        iva_exc = (prima_neta_exc - comision_neta_exc) * tasa
+        menos_iva_exc = prima_neta_exc - comision_neta_exc - iva_exc
+        final_qs = recupero_qs_total - menos_iva_qs
+        final_exc = recupero_exc_total - menos_iva_exc
+
+        result_dict[reasegurador] = {
+            'prima_emitida_qs': prima_emitida_qs,
+            'comisiones_qs': comisiones_qs,
+            'prima_anulada_qs': prima_anulada_qs,
+            'comisiones_anuladas_qs': comisiones_anuladas_qs,
+            'prima_emitida_exc': prima_emitida_exc,
+            'comision_exc': comision_exc,
+            'prima_anulada_exc': prima_anulada_exc,
+            'comision_anulada_exc': comision_anulada_exc,
+            'recupero_qs_total': recupero_qs_total,
+            'recupero_exc_total': recupero_exc_total,
+            'prima_neta_qs': prima_neta_qs,
+            'prima_neta_exc': prima_neta_exc,
+            'comision_neta_qs': comision_neta_qs,
+            'comision_neta_exc': comision_neta_exc,
+            'iva_qs': iva_qs,
+            'menos_iva_qs': menos_iva_qs,
+            'iva_exc': iva_exc,
+            'menos_iva_exc': menos_iva_exc,
+            'final_qs': int(final_qs),
+            'final_exc': int(final_exc),
+            'participacion': participacion
+        }
+    return result_dict

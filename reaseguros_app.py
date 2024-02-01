@@ -104,7 +104,7 @@ def main():
         # Mostrar resumen
         if resumen_df_2020 is not None and table_df_2020 is not None and reaseguradores_df_2020 is not None:
             st.subheader("Resumen periodo 2019-2020")
-            st.dataframe(resumen_df_2020, hide_index=True)
+            st.dataframe(resumen_df_2020, hide_index=True, use_container_width=True)
             resumen_df_container.append(resumen_df_2020)
             #st.subheader("Tabla de valores")
             st.dataframe(table_df_2020, hide_index=True, use_container_width=True)
@@ -112,7 +112,7 @@ def main():
 
         if resumen_df_2021 is not None and table_df_2021 is not None and reaseguradores_df_2021 is not None:
             st.subheader("Resumen periodo 2020-2021")
-            st.dataframe(resumen_df_2021, hide_index=True)
+            st.dataframe(resumen_df_2021, hide_index=True, use_container_width=True)
             resumen_df_container.append(resumen_df_2021)
             #st.subheader("Tabla de valores")
             st.dataframe(table_df_2021, hide_index=True, use_container_width=True)
@@ -120,7 +120,7 @@ def main():
 
         if resumen_df_2022 is not None and table_df_2022 is not None and reaseguradores_df_2022 is not None:
             st.subheader("Resumen periodo 2021-2022")
-            st.dataframe(resumen_df_2022, hide_index=True)
+            st.dataframe(resumen_df_2022, hide_index=True, use_container_width=True)
             resumen_df_container.append(resumen_df_2022)
             #st.subheader("Tabla de valores")
             st.dataframe(table_df_2022, hide_index=True, use_container_width=True)
@@ -128,7 +128,7 @@ def main():
 
         if resumen_df_2023 is not None and table_df_2023 is not None and reaseguradores_df_2023 is not None:
             st.subheader("Resumen periodo 2022-2023")
-            st.dataframe(resumen_df_2023, hide_index=True)
+            st.dataframe(resumen_df_2023, hide_index=True, use_container_width=True)
             resumen_df_container.append(resumen_df_2023)
             #st.subheader("Tabla de valores")
             st.dataframe(table_df_2023, hide_index=True, use_container_width=True)
@@ -136,7 +136,7 @@ def main():
 
         if resumen_df_2024 is not None and table_df_2024 is not None and reaseguradores_df_2024 is not None:
             st.subheader("Resumen periodo 2023-2024")
-            st.dataframe(resumen_df_2024, hide_index=True)
+            st.dataframe(resumen_df_2024, hide_index=True, use_container_width=True)
             resumen_df_container.append(resumen_df_2024)
             #st.subheader("Tabla de valores")
             st.dataframe(table_df_2024, hide_index=True, use_container_width=True)
