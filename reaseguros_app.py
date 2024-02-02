@@ -25,7 +25,7 @@ def main():
     
 
     #Center elements
-    st.title("Elaboración de Cuentas Técnicas")
+    st.title("Estados de Cuentas Trimestrales")
 
     # Upload files
     uploaded_files = st.file_uploader("Subir planillas de Excel", accept_multiple_files=True, type=["xlsx"], help="Subir las planillas excel de Emisiones, Anulaciones y Recuperos una tras otra")

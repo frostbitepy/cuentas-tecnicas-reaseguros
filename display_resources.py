@@ -68,8 +68,8 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
         'Prima cedida en el periodo (EXC)',
         'Prima anulada en el periodo (QS)',
         'Prima anulada en el periodo (EXC)',
-        'Comisiones Netas (QS)',
-        'Comisiones Netas (EXC)',
+        'Comisiones Emitidas (QS)',
+        'Comisiones Emitidas (EXC)',
         'Comisiones Anuladas (QS)',
         'Comisiones Anuladas (EXC)',
         'Siniestros pagados en el periodo QS',
@@ -310,6 +310,16 @@ def generate_reaseguradores_resumen(dict):
 ############
 
 def generate_cuenta_tecnica(dict):
+    impuestos = ((dict['Prima cedida en el periodo (EXC)'] + dict['Prima cedida en el periodo (QS)']) - (dict['Prima anulada en el periodo (EXC)'] + dict['Prima anulada en el periodo (QS)'] +
+                (dict['Comisiones Emitidas (EXC)'] - dict['Comisiones Anuladas (EXC)']) + (dict['Comisiones Emitidas (QS)'] - dict['Comisiones Anuladas (QS)'])))*0.045
+    subtotal_debe = (dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones Emitidas (EXC)']+dict['Comisiones Emitidas (QS)']-dict['Comisiones Anuladas (EXC)'] - 
+                    dict['Comisiones Anuladas (QS)'] + impuestos + dict['Siniestros pagados en el periodo QS']+dict['Siniestros pagados en el periodo EXC'])
+    subtotal_haber = (dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])
+    saldo_estado_cuenta = subtotal_debe - subtotal_haber
+    total_debe = subtotal_debe 
+    total_haber = subtotal_haber + saldo_estado_cuenta
+
+
     data = {
         'CONCEPTO':[
             'PRIMAS CEDIDAS EXCEDENTE',
@@ -332,23 +342,16 @@ def generate_cuenta_tecnica(dict):
             0,
             dict['Prima anulada en el periodo (EXC)'],
             dict['Prima anulada en el periodo (QS)'],
-            dict['Comisiones Netas (EXC)'],
-            dict['Comisiones Netas (QS)'],
+            dict['Comisiones Emitidas (EXC)'],
+            dict['Comisiones Emitidas (QS)'],
             dict['Comisiones Anuladas (EXC)'],
             dict['Comisiones Anuladas (QS)'],
-            int(((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+
-                dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']))*0.045), # IMPUESTO DE LEY - 4,5% DEL PERIODO DE CESION
+            impuestos, # IMPUESTO DE LEY - 4,5% DEL PERIODO DE CESION
             dict['Siniestros pagados en el periodo EXC'],
             dict['Siniestros pagados en el periodo QS'],
-            int(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+
-                +dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']+dict['Siniestros pagados en el periodo QS']+dict['Siniestros pagados en el periodo EXC']+
-                ((((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+
-                dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']))*0.045))), # SUBTOTALES
+            subtotal_debe, # SUBTOTALES
             0,
-            int(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+
-                +dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']+dict['Siniestros pagados en el periodo QS']+dict['Siniestros pagados en el periodo EXC']+
-                ((((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+
-                dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']))*0.045))) # TOTAL
+            total_debe # TOTAL
         ],
         'HABER':[
             dict['Prima cedida en el periodo (EXC)'],
@@ -362,13 +365,9 @@ def generate_cuenta_tecnica(dict):
             0,
             0,
             0,
-            (dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)']), # SUBTOTALES
-            int(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+
-                +dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']+dict['Siniestros pagados en el periodo QS']+dict['Siniestros pagados en el periodo EXC']+
-                ((((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])-(dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+
-                dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)']))*0.045)))-((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])), # SALDO DEL ESTADO DE CUENTA
-            ((dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)'])+((dict['Prima anulada en el periodo (EXC)']+dict['Prima anulada en el periodo (QS)']+
-                dict['Comisiones Netas (EXC)']+dict['Comisiones Netas (QS)']+dict['Comisiones Anuladas (EXC)']+dict['Comisiones Anuladas (QS)'])-(dict['Prima cedida en el periodo (EXC)']+dict['Prima cedida en el periodo (QS)']))) # TOTAL
+            subtotal_haber, # SUBTOTALES
+            saldo_estado_cuenta, # SALDO DEL ESTADO DE CUENTA
+            total_haber # TOTAL
         ]
     }
 

@@ -576,9 +576,9 @@ def calculate_table_values(resumen_dic, tasa):
     # Calculate the values
     primas_cedidas = prima_qs + prima_exc
     primas_anuladas = prima_anulada_qs + prima_anulada_exc
-    comisiones = comisiones_qs + comisiones_exc
+    comisiones = (comisiones_qs - comisiones_anuladas_qs) + (comisiones_exc - comisiones_anuladas_exc)
     siniestros_pagados = siniestros_qs + siniestros_exc
-    impuestos = (primas_cedidas - ((comisiones_qs - comisiones_anuladas_qs)+(comisiones_exc - comisiones_anuladas_exc)))*tasa
+    impuestos = ((primas_cedidas - primas_anuladas) - ((comisiones_qs - comisiones_anuladas_qs)+(comisiones_exc - comisiones_anuladas_exc)))*tasa
     balance_a_favor_debe = primas_anuladas + comisiones + siniestros_pagados + impuestos
     balance_a_favor_haber = primas_cedidas
 
