@@ -125,9 +125,10 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
     resumen_df = pd.DataFrame(data_resumen)
     table_values_df = pd.DataFrame(data_table_values)
     reaseguradores_values_df = pd.DataFrame(generate_reaseguradores_data(invoice_dict))
+    invoice_df = pd.DataFrame(invoice_dict)
 
     # Mostrar DataFrame
-    return resumen_df,table_values_df, reaseguradores_values_df
+    return resumen_df,table_values_df, reaseguradores_values_df, invoice_df
 
 # Generar los resumenes de Vida
 def generate_resumen_vida(year, emisiones_df, anulaciones_df, recuperos_df):
@@ -346,12 +347,12 @@ def generate_cuenta_tecnica(dict):
             dict['Comisiones Emitidas (QS)'],
             dict['Comisiones Anuladas (EXC)'],
             dict['Comisiones Anuladas (QS)'],
-            impuestos, # IMPUESTO DE LEY - 4,5% DEL PERIODO DE CESION
+            int(impuestos), # IMPUESTO DE LEY - 4,5% DEL PERIODO DE CESION
             dict['Siniestros pagados en el periodo EXC'],
             dict['Siniestros pagados en el periodo QS'],
-            subtotal_debe, # SUBTOTALES
+            int(subtotal_debe), # SUBTOTALES
             0,
-            total_debe # TOTAL
+            int(total_debe) # TOTAL
         ],
         'HABER':[
             dict['Prima cedida en el periodo (EXC)'],
@@ -365,9 +366,9 @@ def generate_cuenta_tecnica(dict):
             0,
             0,
             0,
-            subtotal_haber, # SUBTOTALES
-            saldo_estado_cuenta, # SALDO DEL ESTADO DE CUENTA
-            total_haber # TOTAL
+            int(subtotal_haber), # SUBTOTALES
+            int(saldo_estado_cuenta), # SALDO DEL ESTADO DE CUENTA
+            int(total_haber) # TOTAL
         ]
     }
 

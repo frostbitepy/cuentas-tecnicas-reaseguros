@@ -1,5 +1,7 @@
 import openpyxl
 import pandas as pd
+import base64
+import io
 
 def read_xlsx_file(uploaded_file):
     # Read the file into a pandas DataFrame
@@ -675,6 +677,7 @@ def generate_invoice_dict(dict_emitida_qs, dict_emitida_exc, dict_anulada_qs, di
             'comision_anulada_exc': comision_anulada_exc,
             'recupero_qs_total': recupero_qs_total,
             'recupero_exc_total': recupero_exc_total,
+            # Desde acá para mostrar en la app de invoice
             'prima_neta_qs': prima_neta_qs,
             'prima_neta_exc': prima_neta_exc,
             'comision_neta_qs': comision_neta_qs,
@@ -688,3 +691,24 @@ def generate_invoice_dict(dict_emitida_qs, dict_emitida_exc, dict_anulada_qs, di
             'participacion': participacion
         }
     return result_dict
+
+
+# This code will create a download link for the Excel file when the 'Guardar archivos' button is clicked. 
+# The Excel file is first converted to bytes, then encoded as a base64 string. This string is used to create a download link, 
+# which is then displayed using st.markdown.
+def to_excel(df):
+    output = io.BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
+    df.to_excel(writer, sheet_name='Sheet1', index=False)
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
+
+def convert_df_to_excel(resumen_df_container):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    with pd.ExcelWriter("resumenes_total.xlsx", engine="xlsxwriter") as writer:
+        for i, resumen_df in enumerate(resumen_df_container):
+            # Utilizar el nombre del DataFrame como nombre de la hoja
+            sheet_name = f"Sheet_{i+1}"
+            resumen_df.to_excel(writer, sheet_name=sheet_name, index=False)
+    return writer
