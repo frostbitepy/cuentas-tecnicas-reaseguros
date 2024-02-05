@@ -4,7 +4,6 @@ import locale
 import time
 import base64
 import io
-import openpyxl
 import xlsxwriter
 from display_resources import (convert_to_dataframe, generate_resumen,
                                sum_dataframe_values, generate_cuenta_tecnica,
