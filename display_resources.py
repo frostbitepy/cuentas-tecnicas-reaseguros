@@ -33,7 +33,7 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
     sums_result_recuperos_excedente,reaseguros_dict_rexc = process_sum_recuperos_patrimoniales(recuperos_df, year, 'EXCEDENTE')
     sums_result_recuperos_cuota_parte,reaseguros_dict_rqs = process_sum_recuperos_patrimoniales(recuperos_df, year, 'CUOTA PARTE')
     
-    tasa = 4.5
+    tasa = 0.045
 
     prima_qs=sums_result_emisiones_cuota_parte['prima']
     prima_exc=sums_result_emisiones_excedente['prima']
@@ -140,14 +140,16 @@ def generate_resumen_vida(year, emisiones_df, anulaciones_df, recuperos_df):
     sums_result_recuperos_excedente,reaseguros_dict_rexc = process_sum_recuperos_vida(recuperos_df, year, 'EXCEDENTE')
     sums_result_recuperos_cuota_parte,reaseguros_dict_rqs = process_sum_recuperos_vida(recuperos_df, year, 'CUOTA PARTE')
     
-    tasa = 4.5
+    tasa = 0.045
 
     prima_qs=sums_result_emisiones_cuota_parte['prima']
     prima_exc=sums_result_emisiones_excedente['prima']
     prima_anulada_qs=sums_result_anulaciones_cuota_parte['prima']
     prima_anulada_exc=sums_result_anulaciones_excedente['prima']
-    comisiones_qs=sums_result_emisiones_cuota_parte['importe_comision'] - sums_result_anulaciones_cuota_parte['importe_comision']
-    comisiones_exc=sums_result_emisiones_excedente['importe_comision'] - sums_result_anulaciones_excedente['importe_comision']
+    comisiones_qs=sums_result_emisiones_cuota_parte['importe_comision']
+    comisiones_exc=sums_result_emisiones_excedente['importe_comision']
+    comisiones_anulacion_qs=sums_result_anulaciones_cuota_parte['importe_comision']
+    comisiones_anulacion_exc=sums_result_anulaciones_excedente['importe_comision']
     siniestros_qs=sums_result_recuperos_cuota_parte['importe_total']
     siniestros_exc=sums_result_recuperos_excedente['importe_total']
 
@@ -158,6 +160,8 @@ def generate_resumen_vida(year, emisiones_df, anulaciones_df, recuperos_df):
         'prima_anulada_exc': prima_anulada_exc,
         'comisiones_qs': comisiones_qs,
         'comisiones_exc': comisiones_exc,
+        'comisiones_anulacion_qs': comisiones_anulacion_qs,
+        'comisiones_anulacion_exc': comisiones_anulacion_exc,
         'siniestros_qs': siniestros_qs,
         'siniestros_exc': siniestros_exc
     }
@@ -171,8 +175,10 @@ def generate_resumen_vida(year, emisiones_df, anulaciones_df, recuperos_df):
         'Prima cedida en el periodo (EXC)',
         'Prima anulada en el periodo (QS)',
         'Prima anulada en el periodo (EXC)',
-        'Comisiones (QS)',
-        'Comisiones (EXC)',
+        'Comisiones Emitidas (QS)',
+        'Comisiones Emitidas (EXC)',
+        'Comisiones Anuladas (QS)',
+        'Comisiones Anuladas (EXC)',
         'Siniestros pagados en el periodo QS',
         'Siniestros pagados en el periodo EXC'
     ],
@@ -183,6 +189,8 @@ def generate_resumen_vida(year, emisiones_df, anulaciones_df, recuperos_df):
         prima_anulada_exc,
         comisiones_qs,
         comisiones_exc,
+        comisiones_anulacion_qs,
+        comisiones_anulacion_exc,
         siniestros_qs,
         siniestros_exc
     ]
@@ -217,31 +225,16 @@ def generate_resumen_vida(year, emisiones_df, anulaciones_df, recuperos_df):
 
     balance_saldo = table_values_dict['balance_a_favor_haber'] - table_values_dict['balance_a_favor_debe']
 
-    if reaseguros_dict_exc is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_exc, balance_saldo)
-    elif reaseguros_dict_qs is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_qs, balance_saldo)
-    elif reaseguros_dict_aexc is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_aexc, balance_saldo)
-    elif reaseguros_dict_aqs is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_aqs, balance_saldo)
-    elif reaseguros_dict_rexc is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_rexc, balance_saldo)
-    elif reaseguros_dict_rqs is not None:
-        reaseguradores_dict = generate_reaseguradores_data(reaseguros_dict_rqs, balance_saldo)
-    else:
-        reaseguradores_dict = {}
-
-    # Reaseguradores Data
-    data_reaseguradores = reaseguradores_dict
+    invoice_dict = generate_invoice_dict(reaseguros_dict_qs, reaseguros_dict_exc, reaseguros_dict_aqs, reaseguros_dict_aexc, reaseguros_dict_rqs, reaseguros_dict_rexc, 0.045)
 
     # Crear DataFrame
     resumen_df = pd.DataFrame(data_resumen)
     table_values_df = pd.DataFrame(data_table_values)
-    reaseguradores_values_df = pd.DataFrame(data_reaseguradores)
+    reaseguradores_values_df = pd.DataFrame(generate_reaseguradores_data(invoice_dict))
+    invoice_df = pd.DataFrame(invoice_dict)
 
     # Mostrar DataFrame
-    return resumen_df,table_values_df, reaseguradores_values_df
+    return resumen_df,table_values_df, reaseguradores_values_df, invoice_df
 
 # Deprecated
 def generate_table(dict):
