@@ -7,7 +7,7 @@ import io
 import xlsxwriter
 from display_resources import (convert_to_dataframe, generate_resumen,
                                sum_dataframe_values, generate_cuenta_tecnica,
-                               generate_resumen_vida)
+                               generate_resumen_vida, generate_resumen_caucion)
 
 
 @st.cache_data
@@ -41,9 +41,9 @@ def main():
 
     st.sidebar.subheader("Sección")
     # Using object notation
-    section_fitler = st.sidebar.selectbox(
+    section_filter = st.sidebar.selectbox(
         '',
-        ('Incendios', 'Vida'),
+        ('Incendios', 'Vida', 'Caución'),
         placeholder="Elige una opción",
         )
     
@@ -67,7 +67,7 @@ def main():
             st.text(progress_text)
             time.sleep(1)
             my_bar.progress(10)
-            if section_fitler == 'Incendios':
+            if section_filter == 'Incendios':
                 emisiones_df, anulaciones_df, recuperos_df = convert_to_dataframe(uploaded_files)
                 my_bar.progress(33)
                 st.success('Archivos convertidos a DataFrames correctamente.')
@@ -96,7 +96,7 @@ def main():
                 time.sleep(1)
                 my_bar.empty()
 
-            elif section_fitler == 'Vida':
+            elif section_filter == 'Vida':
                 emisiones_df, anulaciones_df, recuperos_df = convert_to_dataframe(uploaded_files)
                 my_bar.progress(33)
                 st.success('Archivos convertidos a DataFrames correctamente.')
@@ -124,6 +124,37 @@ def main():
 
                 time.sleep(1)
                 my_bar.empty()
+
+            elif section_filter == 'Caución':
+                emisiones_df, anulaciones_df, recuperos_df = convert_to_dataframe(uploaded_files)
+                my_bar.progress(33)
+                st.success('Archivos convertidos a DataFrames correctamente.')
+                my_bar.progress(66)
+
+                resumen_df_2020,table_df_2020,reaseguradores_df_2020,invoice_df_2020=generate_resumen_caucion(2020, emisiones_df, anulaciones_df, recuperos_df)
+                #st.success('Resumen 2020 generado correctamente.')
+                my_bar.progress(70)
+
+                resumen_df_2021,table_df_2021,reaseguradores_df_2021,invoice_df_2021=generate_resumen_caucion(2021, emisiones_df, anulaciones_df, recuperos_df)
+                #st.success('Resumen 2021 generado correctamente.')
+                my_bar.progress(80)
+
+                resumen_df_2022,table_df_2022,reaseguradores_df_2022,invoice_df_2022=generate_resumen_caucion(2022, emisiones_df, anulaciones_df, recuperos_df)
+                #st.success('Resumen 2022 generado correctamente.')
+                my_bar.progress(90)
+
+                resumen_df_2023,table_df_2023,reaseguradores_df_2023,invoice_df_2023=generate_resumen_caucion(2023, emisiones_df, anulaciones_df, recuperos_df)
+                #st.success('Resumen 2023 generado correctamente.')
+                my_bar.progress(95)
+
+                resumen_df_2024,table_df_2024,reaseguradores_df_2024,invoice_df_2024=generate_resumen_caucion(2024, emisiones_df, anulaciones_df, recuperos_df)
+                #st.success('Resumen 2024 generado correctamente.')
+                my_bar.progress(100)
+
+                time.sleep(1)
+                my_bar.empty()
+
+
             
         else:
             st.warning('Debe cargar las planillas correspondientes a Emisiones, Anulaciones y Recuperos', icon="⚠️")

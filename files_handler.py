@@ -74,6 +74,65 @@ if your_filtered_df is not None:
     print(your_filtered_df)
 """
 
+def filter_dataframe_caucion(df, year, riesgo, vida=False):
+    # Initialize an empty list to store the selected DataFrames
+    selected_dfs = []
+
+    # Flags to track whether "TOTAL:" and "Contrato:" are found
+    total_found = False
+    contrato_found = False
+
+    # Iterate through the DataFrame
+    for i in range(len(df)):
+        # Check conditions for each row
+        # Qué secciones calcular: en este caso se excluyen VIDA y CAUCION
+        if (
+            df.iloc[i, 2] == "TOTAL:" and
+            df.iloc[i, 3] == year and
+            (isinstance(df.iloc[i, 7], str) and (df.iloc[i, 7]).split()[0] == "CAUCION") and
+            (isinstance(df.iloc[i, 7], str) and not (df.iloc[i, 7]).split()[0] == "VIDA") and
+            df.iloc[i, 4] == riesgo
+        ):
+            total_found = True
+            contrato_found = False
+        elif df.iloc[i, 2] == "Contrato:":
+            contrato_found = True
+            total_found = False
+    
+        # Select rows between "TOTAL:" and "Contrato:"
+        if total_found and not contrato_found:
+            selected_dfs.append(df.iloc[i])
+
+    # Check if there are selected DataFrames
+    if selected_dfs:
+        # Concatenate the list of selected DataFrames into a single DataFrame
+        result_df = pd.concat(selected_dfs, axis=1).T
+
+        # Filter out rows that start with specific words in the first column
+        result_df = result_df[~result_df.iloc[:, 0].astype(str).str.startswith(('Póliza', 'Operador:'))]
+
+        # Filter out rows that in the third column start with specific words
+        result_df = result_df[~result_df.iloc[:, 2].astype(str).str.startswith(('REGIONAL', 'Listado', 'Emisiones', 'Anulaciones'))]
+
+        # Remove columns with all NaN values
+        result_df = result_df.dropna(axis=1, how='all')
+
+        # Change the column names for letters. Example: "Unamed: 0" to "A"
+        result_df.columns = [chr(65 + i) for i in range(len(result_df.columns))]
+
+        return result_df
+    else:
+        print("No matching rows found.")
+        return None
+"""
+# Example usage
+# Replace 'your_dataframe' with the actual DataFrame variable name
+# Replace 2022 and 'EXCEDENTE' with the desired values for year and riesgo
+your_filtered_df = filter_dataframe_caucion(df, 2023, 'EXCEDENTE')
+if your_filtered_df is not None:
+    print(your_filtered_df)
+"""
+
 
 def filter_dataframe_patrimoniales(df, year, riesgo, vida=False):
     # Initialize an empty list to store the selected DataFrames
@@ -249,7 +308,67 @@ def filter_recuperos_vida(df, year, riesgo, vida=False):
 # Example usage
 # Replace 'your_dataframe' with the actual DataFrame variable name
 # Replace 2022 and 'EXCEDENTE' with the desired values for year and riesgo
-your_filtered_df = filter_recuperos_patrimoniales(df, 2023, 'EXCEDENTE')
+your_filtered_df = filter_recuperos_vida(df, 2023, 'EXCEDENTE')
+if your_filtered_df is not None:
+    print(your_filtered_df)
+"""
+
+
+def filter_recuperos_caucion(df, year, riesgo, vida=False):
+    # Initialize an empty list to store the selected DataFrames
+    selected_dfs = []
+
+    # Flags to track whether "TOTAL:" and "Contrato:" are found
+    total_found = False
+    contrato_found = False
+
+    # Iterate through the DataFrame
+    for i in range(len(df)):
+        # Check conditions for each row
+        # Qué secciones calcular: en este caso se excluyen VIDA y CAUCION
+        if (
+            df.iloc[i, 0] == "Total Contrato:" and
+            df.iloc[i, 2] == year and
+            (df.iloc[i, 9]).split()[0] == "CAUCION" and
+            not (df.iloc[i, 9]).split()[0] == "VIDA" and
+            df.iloc[i, 3] == riesgo
+        ):
+            total_found = True
+            contrato_found = False
+        elif df.iloc[i, 0] == "Contrato:" or df.iloc[i, 1] == "Resumen":
+            contrato_found = True
+            total_found = False
+    
+        # Select rows between "TOTAL:" and "Contrato:"
+        if total_found and not contrato_found:
+            selected_dfs.append(df.iloc[i])
+
+    # Check if there are selected DataFrames
+    if selected_dfs:
+        # Concatenate the list of selected DataFrames into a single DataFrame
+        result_df = pd.concat(selected_dfs, axis=1).T
+
+        # Filter out rows that start with specific words in the first column
+        result_df = result_df[~result_df.iloc[:, 0].astype(str).str.startswith(('Póliza', 'Operador:'))]
+
+        # Filter out rows that in the third column start with specific words
+        result_df = result_df[~result_df.iloc[:, 2].astype(str).str.startswith(('REGIONAL', 'Listado', 'Emisiones', 'Anulaciones'))]
+
+        # Remove columns with all NaN values
+        result_df = result_df.dropna(axis=1, how='all')
+
+        # Change the column names for letters. Example: "Unamed: 0" to "A"
+        result_df.columns = [chr(65 + i) for i in range(len(result_df.columns))]
+
+        return result_df
+    else:
+        print("No matching rows found.")
+        return None
+"""
+# Example usage
+# Replace 'your_dataframe' with the actual DataFrame variable name
+# Replace 2022 and 'EXCEDENTE' with the desired values for year and riesgo
+your_filtered_df = filter_recuperos_caucion(df, 2023, 'EXCEDENTE')
 if your_filtered_df is not None:
     print(your_filtered_df)
 """
@@ -374,6 +493,32 @@ print("A Favor:", your_sums_result[2])
 """
 
 
+def process_and_sum_caucion(df, year, riesgo):
+    # Step 1: Filter the DataFrame
+    filtered_df = filter_dataframe_caucion(df, year, riesgo)
+
+    # Step 2: Generate reaseguros dictionary
+    reaseguros_dict = create_reaseguros_dict(filtered_df)
+    
+    # Step 3: Remove totals from the filtered DataFrame
+    processed_df = remove_totals(filtered_df)
+    
+    # Step 4: Calculate the sums
+    sums_result = calculate_sums(processed_df)
+    
+    return sums_result, reaseguros_dict
+"""
+# Example usage
+# Replace 'your_dataframe' with the actual DataFrame variable name
+# Replace 2022 and 'EXCEDENTE' with the desired values for year and riesgo
+your_sums_result = process_and_sum_caucion(df, 2023, 'EXCEDENTE')
+print("Prima:", your_sums_result[0])
+print("Importe Comision:", your_sums_result[1])
+print("A Favor:", your_sums_result[2])
+"""
+
+
+
 def process_and_sum_patrimoniales(df, year, riesgo):
     # Step 1: Filter the DataFrame
     filtered_df = filter_dataframe_patrimoniales(df, year, riesgo)
@@ -448,6 +593,32 @@ print("Indemnizacion:", your_sums_result[0])
 print("Gastos:", your_sums_result[1])
 print("Importe Total:", your_sums_result[2])
 """
+
+
+def process_sum_recuperos_caucion(df, year, riesgo):
+    # Step 1: Filter the DataFrame
+    filtered_df = filter_recuperos_caucion(df, year, riesgo)
+
+    # Step 2: Generate reaseguros dictionary
+    reaseguros_dict = create_reaseguros_dict_recuperos(filtered_df)
+    
+    # Step 3: Remove totals from the filtered DataFrame
+    processed_df = remove_totals_recuperos(filtered_df)
+    
+    # Step 4: Calculate the sums
+    sums_result = calculate_sums_recuperos(processed_df)
+    
+    return sums_result, reaseguros_dict
+"""
+# Example usage
+# Replace 'your_dataframe' with the actual DataFrame variable name
+# Replace 2022 and 'EXCEDENTE' with the desired values for year and riesgo
+your_sums_result = process_sum_recuperos_vida(df, 2023, 'EXCEDENTE')
+print("Indemnizacion:", your_sums_result[0])
+print("Gastos:", your_sums_result[1])
+print("Importe Total:", your_sums_result[2])
+"""
+
 
 # Deprecated
 def create_reaseguros_dict_2(df):

@@ -3,7 +3,7 @@ import streamlit as st
 import openpyxl
 from files_handler import (process_and_sum_patrimoniales, process_sum_recuperos_patrimoniales,
                            calculate_table_values, process_and_sum_vida, process_sum_recuperos_vida,
-                           generate_invoice_dict)
+                           generate_invoice_dict, process_and_sum_caucion, process_sum_recuperos_caucion)
 
 
 
@@ -130,6 +130,7 @@ def generate_resumen(year, emisiones_df, anulaciones_df, recuperos_df):
     # Mostrar DataFrame
     return resumen_df,table_values_df, reaseguradores_values_df, invoice_df
 
+
 # Generar los resumenes de Vida
 def generate_resumen_vida(year, emisiones_df, anulaciones_df, recuperos_df):
 
@@ -235,6 +236,114 @@ def generate_resumen_vida(year, emisiones_df, anulaciones_df, recuperos_df):
 
     # Mostrar DataFrame
     return resumen_df,table_values_df, reaseguradores_values_df, invoice_df
+
+
+# Generar los resumenes de Caucion
+def generate_resumen_caucion(year, emisiones_df, anulaciones_df, recuperos_df):
+
+    sums_result_emisiones_excedente,reaseguros_dict_exc = process_and_sum_caucion(emisiones_df, year,'EXCEDENTE')
+    sums_result_emisiones_cuota_parte,reaseguros_dict_qs = process_and_sum_caucion(emisiones_df, year,'CUOTA PARTE')
+    sums_result_anulaciones_excedente,reaseguros_dict_aexc = process_and_sum_caucion(anulaciones_df, year,'EXCEDENTE')
+    sums_result_anulaciones_cuota_parte,reaseguros_dict_aqs = process_and_sum_caucion(anulaciones_df, year, 'CUOTA PARTE')
+    sums_result_recuperos_excedente,reaseguros_dict_rexc = process_sum_recuperos_caucion(recuperos_df, year, 'EXCEDENTE')
+    sums_result_recuperos_cuota_parte,reaseguros_dict_rqs = process_sum_recuperos_caucion(recuperos_df, year, 'CUOTA PARTE')
+    
+    tasa = 0.045
+
+    prima_qs=sums_result_emisiones_cuota_parte['prima']
+    prima_exc=sums_result_emisiones_excedente['prima']
+    prima_anulada_qs=sums_result_anulaciones_cuota_parte['prima']
+    prima_anulada_exc=sums_result_anulaciones_excedente['prima']
+    comisiones_qs=sums_result_emisiones_cuota_parte['importe_comision']
+    comisiones_exc=sums_result_emisiones_excedente['importe_comision']
+    comisiones_anulacion_qs=sums_result_anulaciones_cuota_parte['importe_comision']
+    comisiones_anulacion_exc=sums_result_anulaciones_excedente['importe_comision']
+    siniestros_qs=sums_result_recuperos_cuota_parte['importe_total']
+    siniestros_exc=sums_result_recuperos_excedente['importe_total']
+
+    resumen_dict = {
+        'prima_qs': prima_qs,
+        'prima_exc': prima_exc,
+        'prima_anulada_qs': prima_anulada_qs,
+        'prima_anulada_exc': prima_anulada_exc,
+        'comisiones_qs': comisiones_qs,
+        'comisiones_exc': comisiones_exc,
+        'comisiones_anulacion_qs': comisiones_anulacion_qs,
+        'comisiones_anulacion_exc': comisiones_anulacion_exc,
+        'siniestros_qs': siniestros_qs,
+        'siniestros_exc': siniestros_exc
+    }
+
+    table_values_dict = calculate_table_values(resumen_dict, 0.045)
+
+    # Data
+    data_resumen = {
+    'Vigencia/Contrato': [
+        'Prima cedida en el periodo (QS)',
+        'Prima cedida en el periodo (EXC)',
+        'Prima anulada en el periodo (QS)',
+        'Prima anulada en el periodo (EXC)',
+        'Comisiones Emitidas (QS)',
+        'Comisiones Emitidas (EXC)',
+        'Comisiones Anuladas (QS)',
+        'Comisiones Anuladas (EXC)',
+        'Siniestros pagados en el periodo QS',
+        'Siniestros pagados en el periodo EXC'
+    ],
+    'Monto' : [
+        prima_qs,
+        prima_exc,
+        prima_anulada_qs,
+        prima_anulada_exc,
+        comisiones_qs,
+        comisiones_exc,
+        comisiones_anulacion_qs,
+        comisiones_anulacion_exc,
+        siniestros_qs,
+        siniestros_exc
+    ]
+    }
+
+    data_table_values = {
+        'CONCEPTO': [
+            'Primas cedidas',
+            'Primas anuladas',
+            'Comisiones',
+            'Siniestros pagados',
+            'Impuesto 4,5%',
+            'Balance Saldo a favor del Reasegurador'
+        ],
+        'DEBE': [
+            0,  # Debe asignar el valor correspondiente
+            table_values_dict['primas_anuladas'],  # Debe asignar el valor correspondiente
+            table_values_dict['comisiones'],  # Debe asignar el valor correspondiente
+            table_values_dict['siniestros_pagados'],  # Debe asignar el valor correspondiente
+            table_values_dict['impuestos'],  # Debe asignar el valor correspondiente
+            table_values_dict['balance_a_favor_debe']  # Valor proporcionado
+        ],
+        'HABER': [
+            table_values_dict['primas_cedidas'],  # Valor proporcionado
+            0,  # Valor proporcionado
+            0,  # Valor proporcionado
+            0,  # Valor proporcionado
+            0,  # Valor proporcionado
+            table_values_dict['balance_a_favor_haber']  # Valor proporcionado
+        ]
+    }
+
+    balance_saldo = table_values_dict['balance_a_favor_haber'] - table_values_dict['balance_a_favor_debe']
+
+    invoice_dict = generate_invoice_dict(reaseguros_dict_qs, reaseguros_dict_exc, reaseguros_dict_aqs, reaseguros_dict_aexc, reaseguros_dict_rqs, reaseguros_dict_rexc, 0.045)
+
+    # Crear DataFrame
+    resumen_df = pd.DataFrame(data_resumen)
+    table_values_df = pd.DataFrame(data_table_values)
+    reaseguradores_values_df = pd.DataFrame(generate_reaseguradores_data(invoice_dict))
+    invoice_df = pd.DataFrame(invoice_dict)
+
+    # Mostrar DataFrame
+    return resumen_df,table_values_df, reaseguradores_values_df, invoice_df
+
 
 # Deprecated
 def generate_table(dict):
