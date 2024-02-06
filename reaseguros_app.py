@@ -24,7 +24,7 @@ def convert_dict_to_excel(data_dict):
             for i, item in enumerate(value_list):
                 sheet_name_item = sheet_name
                 
-                item.to_excel(writer, sheet_name=sheet_name_item, index=False, startrow=i * (len(item) + 7), header=True)
+                item.to_excel(writer, sheet_name=sheet_name_item, index=False, startrow=i * (len(item) + 10), header=True)
                 
                 for j, column in enumerate(item.columns):
                     max_len = max(item[column].astype(str).apply(len).max(), len(column))
@@ -103,23 +103,23 @@ def main():
                 my_bar.progress(66)
 
                 resumen_df_2020,table_df_2020,reaseguradores_df_2020,invoice_df_2020=generate_resumen_vida(2020, emisiones_df, anulaciones_df, recuperos_df)
-                st.success('Resumen 2020 generado correctamente.')
+                #st.success('Resumen 2020 generado correctamente.')
                 my_bar.progress(70)
 
                 resumen_df_2021,table_df_2021,reaseguradores_df_2021,invoice_df_2021=generate_resumen_vida(2021, emisiones_df, anulaciones_df, recuperos_df)
-                st.success('Resumen 2021 generado correctamente.')
+                #st.success('Resumen 2021 generado correctamente.')
                 my_bar.progress(80)
 
                 resumen_df_2022,table_df_2022,reaseguradores_df_2022,invoice_df_2022=generate_resumen_vida(2022, emisiones_df, anulaciones_df, recuperos_df)
-                st.success('Resumen 2022 generado correctamente.')
+                #st.success('Resumen 2022 generado correctamente.')
                 my_bar.progress(90)
 
                 resumen_df_2023,table_df_2023,reaseguradores_df_2023,invoice_df_2023=generate_resumen_vida(2023, emisiones_df, anulaciones_df, recuperos_df)
-                st.success('Resumen 2023 generado correctamente.')
+                #st.success('Resumen 2023 generado correctamente.')
                 my_bar.progress(95)
 
                 resumen_df_2024,table_df_2024,reaseguradores_df_2024,invoice_df_2024=generate_resumen_vida(2024, emisiones_df, anulaciones_df, recuperos_df)
-                st.success('Resumen 2024 generado correctamente.')
+                #st.success('Resumen 2024 generado correctamente.')
                 my_bar.progress(100)
 
                 time.sleep(1)
